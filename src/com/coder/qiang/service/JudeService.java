@@ -24,7 +24,7 @@ public class JudeService {
                 allFiles) {
             System.out.println(a.getName());
             String suffix= a.getName().substring( a.getName().lastIndexOf(".")+1, a.getName().length());
-            if(suffix.equals("java")||suffix.equals("xml")||suffix.equals("properties"))
+            if(suffix.equals("java")||suffix.equals("xml")||suffix.equals("properties")||suffix.equals("jar"))
                 continue;
             boolean flag=false;
             for (int i=0;i<allFiles.size();i++) {

@@ -4,19 +4,17 @@ package com.coder.qiang.ui;
  * Created by Administrator on 2016/12/2.
  */
 
+import com.coder.qiang.modal.MyTableModel;
 import com.coder.qiang.modal.UnUseFile;
 import com.coder.qiang.service.JudeService;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
 import java.io.File;
 import java.util.*;
-import java.util.List;
 import javax.swing.*;
 
 /**
- *
  * @author 漆艾林 QQ 172794299 邮箱 qiailing.ok@163.com
  */
 public class FileChooser implements ActionListener {
@@ -28,7 +26,10 @@ public class FileChooser implements ActionListener {
     JButton button1 = new JButton("选择文件目录");// 选择
     JFileChooser jfc = new JFileChooser();// 文件选择器
     JButton button3 = new JButton("确定");//
-    private JList list = null;
+    JButton button4 = new JButton("删除文件");//
+    JTable result = null;
+    JScrollPane scrollPane = null;
+    MyTableModel myTableModel = null;
 
     FileChooser() {
         jfc.setCurrentDirectory(new File("d://"));// 文件选择器的初始目录定为d盘
@@ -38,7 +39,7 @@ public class FileChooser implements ActionListener {
         double ly = Toolkit.getDefaultToolkit().getScreenSize().getHeight();
 
         frame.setLocation(new Point((int) (lx / 2) - 150, (int) (ly / 2) - 150));// 设定窗口出现位置
-        frame.setSize(380, 500);// 设定窗口大小
+        frame.setSize(680, 500);// 设定窗口大小
         label1.setBounds(10, 10, 70, 20);
         label2.setBounds(10, 80, 70, 20);
         text1.setBounds(75, 10, 120, 20);
@@ -73,18 +74,62 @@ public class FileChooser implements ActionListener {
         }
         if (e.getSource().equals(button3)) {
             // 判断
-            String path=text1.getText();
-            Vector<UnUseFile>  unUseFiles= JudeService.getUnUserFiles(path);
-            System.out.println(unUseFiles.toArray());
-            this.list = new JList(unUseFiles);
-            list.setBounds(0, 100, 380, 400);
-            con.add(list);
-            con.repaint();
-            frame.repaint();
+            String path = text1.getText();
+            new Thread(new Runnable() {
+                public void run() {
+                    //do something...
+                    if (result != null) {
+                        con.remove(scrollPane);
+                        con.remove(button4);
+                        con.repaint();
+                        frame.repaint();
+                    }
+                    Vector<UnUseFile> unUseFiles = JudeService.getUnUserFiles(path);
+                    myTableModel = new MyTableModel(unUseFiles);
+                    result = new JTable(myTableModel);
+                    result.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+                    scrollPane = new JScrollPane(result);
+                    scrollPane.setBounds(0, 100, 670, 300);
+                    button4.setBounds(480, 420, 100, 20);
+                    con.add(scrollPane);
+                    con.add(button4);
+                    button4.addActionListener(FileChooser.this); // 添加事件处理
+                    con.repaint();
+                    frame.repaint();
+                }
+            }).start();
+        }
 
+        if (e.getSource().equals(button4)) {
+            Map<Integer, String> deleteFiles = new HashMap<>();
+            if (result != null) {
+                for (int i = 0; i < result.getRowCount(); i++) {
+                    if (result.getValueAt(i, 0).toString().equals("true")) {
+                        deleteFiles.put(i, result.getValueAt(i, 3).toString());
+                    }
+                }
+            }
+            if (deleteFiles.size() > 0) {
+                //删除文件
+                for (Integer key : deleteFiles.keySet()) {
+                    File f = new File(deleteFiles.get(key));  // 输入要删除的文件位置
+                    if(f.exists())
+                    {
+                        if(f.delete())
+                        {
+                            myTableModel.deleteRow(key);
+                        }
+                    }
+                }
+            } else {
+                JOptionPane.showMessageDialog(null, "请选择要删除的文件",
+                        "错误提示", JOptionPane.ERROR_MESSAGE);
+            }
 
         }
+
     }
+
 
     public static void main(String[] args) {
         new FileChooser();

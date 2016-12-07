@@ -44,9 +44,15 @@ public class Util {
                 allFiles.add(tempList[i]);
             }
             if (tempList[i].isDirectory()) {
+                if(tempList[i].getName().indexOf(".")==0)
+                {
+                    //隐藏文件 不读
+                    continue;
+                }
                 allFiles.addAll(getAllFile(tempList[i].getPath()));
             }
         }
         return allFiles;
     }
+
 }
