@@ -13,6 +13,8 @@ import java.awt.event.*;
 import java.io.File;
 import java.util.*;
 import javax.swing.*;
+import javax.swing.table.JTableHeader;
+import javax.swing.table.TableColumn;
 
 /**
  * @author 漆艾林 QQ 172794299 邮箱 qiailing.ok@163.com
@@ -41,10 +43,10 @@ public class FileChooser implements ActionListener {
         frame.setLocation(new Point((int) (lx / 2) - 150, (int) (ly / 2) - 150));// 设定窗口出现位置
         frame.setSize(680, 500);// 设定窗口大小
         label1.setBounds(10, 10, 70, 20);
-        label2.setBounds(10, 80, 70, 20);
-        text1.setBounds(75, 10, 120, 20);
-        button1.setBounds(210, 10, 100, 20);
-        button3.setBounds(140, 60, 100, 20);
+        label2.setBounds(10, 80, 120, 20);
+        text1.setBounds(75, 10, 420, 20);
+        button1.setBounds(510, 10, 100, 20);
+        button3.setBounds(300, 60, 100, 20);
         button1.addActionListener(this); // 添加事件处理
         button3.addActionListener(this); // 添加事件处理
         con.add(label1);
@@ -84,10 +86,17 @@ public class FileChooser implements ActionListener {
                         con.repaint();
                         frame.repaint();
                     }
+                    InfiniteProgressPanel glasspane = new InfiniteProgressPanel();	Dimension dimension = Toolkit.getDefaultToolkit().getScreenSize();
+                    glasspane.setBounds(100, 100, (dimension.width) / 2, (dimension.height) / 2);
+                    frame.setGlassPane(glasspane);
+                    glasspane.start();//开始动画加载效果
+                    frame.setVisible(true);
+
                     Vector<UnUseFile> unUseFiles = JudeService.getUnUserFiles(path);
                     myTableModel = new MyTableModel(unUseFiles);
                     result = new JTable(myTableModel);
                     result.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+                    FitTableColumns(result);
                     scrollPane = new JScrollPane(result);
                     scrollPane.setBounds(0, 100, 670, 300);
                     button4.setBounds(480, 420, 100, 20);
@@ -96,6 +105,7 @@ public class FileChooser implements ActionListener {
                     button4.addActionListener(FileChooser.this); // 添加事件处理
                     con.repaint();
                     frame.repaint();
+                    glasspane.stop();
                 }
             }).start();
         }
@@ -128,6 +138,26 @@ public class FileChooser implements ActionListener {
 
         }
 
+    }
+    public void FitTableColumns(JTable myTable) {
+        JTableHeader header = myTable.getTableHeader();
+        int rowCount = myTable.getRowCount();
+
+        Enumeration columns = myTable.getColumnModel().getColumns();
+        while (columns.hasMoreElements()) {
+            TableColumn column = (TableColumn) columns.nextElement();
+            int col = header.getColumnModel().getColumnIndex(column.getIdentifier());
+            int width = (int) myTable.getTableHeader().getDefaultRenderer()
+                    .getTableCellRendererComponent(myTable, column.getIdentifier()
+                            , false, false, -1, col).getPreferredSize().getWidth();
+            for (int row = 0; row < rowCount; row++) {
+                int preferedWidth = (int) myTable.getCellRenderer(row, col).getTableCellRendererComponent(myTable,
+                        myTable.getValueAt(row, col), false, false, row, col).getPreferredSize().getWidth();
+                width = Math.max(width, preferedWidth);
+            }
+            header.setResizingColumn(column); // 此行很重要
+            column.setWidth(width + myTable.getIntercellSpacing().width);
+        }
     }
 
 
